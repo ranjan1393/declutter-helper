@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 const COLORS = {
   bg: "#F5F0E8",
@@ -6,7 +6,6 @@ const COLORS = {
   ink: "#1C1917",
   muted: "#78716C",
   accent: "#C84B31",
-  accentLight: "#F5E6E2",
   keep: "#2D6A4F",
   donate: "#1D4E89",
   repurpose: "#7B5E2A",
@@ -14,7 +13,16 @@ const COLORS = {
   border: "#E0D8CC",
 };
 
-const VERDICTS = {
+type VerdictKey = "keep" | "donate" | "repurpose" | "trash";
+
+interface VerdictInfo {
+  label: string;
+  emoji: string;
+  color: string;
+  bg: string;
+}
+
+const VERDICTS: Record<VerdictKey, VerdictInfo> = {
   keep: { label: "Keep It", emoji: "✦", color: COLORS.keep, bg: "#EAF5EE" },
   donate: { label: "Donate / Give Away", emoji: "♡", color: COLORS.donate, bg: "#E8EFF8" },
   repurpose: { label: "Repurpose", emoji: "↺", color: COLORS.repurpose, bg: "#F5EFE6" },
@@ -29,7 +37,20 @@ const EXAMPLES = [
   "Kids' toys from when they were 5 (now 15)",
 ];
 
-async function askClaude(item, context) {
+interface Result {
+  item: string;
+  verdict: VerdictKey;
+  headline: string;
+  reasoning: string;
+  action: string;
+}
+
+interface HistoryItem {
+  item: string;
+  verdict: VerdictKey;
+}
+
+async function askClaude(item: string, context: string): Promise<Result> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -49,7 +70,7 @@ ${context ? `Context: "${context}"` : ""}
 
 Consider: sentimental value, practical use, Indian family dynamics, guilt around gifts, "might need someday" thinking.
 
-Respond ONLY in this exact JSON format:
+Respond ONLY in this exact JSON format, nothing else:
 {
   "verdict": "keep" or "donate" or "repurpose" or "trash",
   "headline": "Short warm 6-8 word headline",
@@ -60,17 +81,18 @@ Respond ONLY in this exact JSON format:
     }),
   });
   const data = await response.json();
-  const text = data.content.map(i => i.text || "").join("");
-  return JSON.parse(text.replace(/```json|```/g, "").trim());
+  const text = data.content.map((i: { text?: string }) => i.text || "").join("");
+  const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+  return { item, ...parsed };
 }
 
 export default function App() {
   const [item, setItem] = useState("");
   const [context, setContext] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const handleSubmit = async () => {
     if (!item.trim()) return;
@@ -79,26 +101,28 @@ export default function App() {
     setError(null);
     try {
       const verdict = await askClaude(item.trim(), context.trim());
-      setResult({ item: item.trim(), ...verdict });
+      setResult(verdict);
       setHistory(h => [{ item: item.trim(), verdict: verdict.verdict }, ...h].slice(0, 10));
-    } catch (e) {
+    } catch {
       setError("Something went wrong. Please try again.");
     }
     setLoading(false);
   };
 
   const reset = () => { setItem(""); setContext(""); setResult(null); setError(null); };
-  const v = result ? VERDICTS[result.verdict] : null;
 
   const shareOnWhatsApp = () => {
     if (!result) return;
+    const v = VERDICTS[result.verdict];
     const text = `I used an AI declutter helper for: "${result.item}"\n\nVerdict: ${v.label}\n\n"${result.reasoning}"\n\nAction: ${result.action}\n\nTry it: https://declutter-helper.vercel.app`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
+  const v = result ? VERDICTS[result.verdict] : null;
+
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, fontFamily: "Georgia, serif", padding: 0 }}>
-      <header style={{ background: COLORS.ink, color: COLORS.bg, padding: "24px 24px", borderBottom: `4px solid ${COLORS.accent}` }}>
+      <header style={{ background: COLORS.ink, color: COLORS.bg, padding: "24px", borderBottom: `4px solid ${COLORS.accent}` }}>
         <div style={{ fontSize: "11px", letterSpacing: "4px", textTransform: "uppercase", color: COLORS.accent, marginBottom: "4px" }}>Declutter Helper</div>
         <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "normal" }}>Should I Keep It?</h1>
         <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#A8A29E", fontStyle: "italic" }}>Honest advice for Indian homes & hearts</p>
@@ -111,7 +135,9 @@ export default function App() {
             <textarea value={item} onChange={e => setItem(e.target.value)} placeholder="e.g. Saree gifted by mausi 10 years ago, never worn..." rows={3}
               style={{ width: "100%", border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "12px", fontSize: "16px", fontFamily: "Georgia, serif", background: COLORS.bg, color: COLORS.ink, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
 
-            <label style={{ display: "block", fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: COLORS.muted, margin: "18px 0 8px" }}>Any context? <span style={{ fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
+            <label style={{ display: "block", fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: COLORS.muted, margin: "18px 0 8px" }}>
+              Any context? <span style={{ fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+            </label>
             <textarea value={context} onChange={e => setContext(e.target.value)} placeholder="e.g. It was a gift from someone who passed away..." rows={2}
               style={{ width: "100%", border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "12px", fontSize: "15px", fontFamily: "Georgia, serif", background: COLORS.bg, color: COLORS.ink, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
 
