@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/App.tsx << 'EOF'
 import { useState } from "react";
 
 const COLORS = {
@@ -191,5 +190,3 @@ export default function App() {
     </div>
   );
 }
-EOF
-echo "Done"
