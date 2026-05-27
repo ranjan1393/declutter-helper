@@ -56,7 +56,8 @@ async function askClaude(item: string, context: string): Promise<Result> {
     body: JSON.stringify({ item, context }),
   });
   const data = await response.json();
-  const text = data.content.map((i: { text?: string }) => i.text || "").join("");
+  console.log("API response:", JSON.stringify(data));
+const text = data.content.map((i: { text?: string }) => i.text || "").join("");
   const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
   return { item, ...parsed };
 }
