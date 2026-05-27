@@ -51,14 +51,12 @@ interface HistoryItem {
 }
 
 async function askClaude(item: string, context: string): Promise<Result> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({
+    body: JSON.stringify({item,context}),
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
       messages: [{
