@@ -90,8 +90,8 @@ export default function App() {
   const shareOnWhatsApp = () => {
     if (!result) return;
     const v = VERDICTS[result.verdict];
-    const text = I used an AI declutter helper for: "${result.item}"\n\nVerdict: ${v.label}\n\n"${result.reasoning}"\n\nAction: ${result.action}\n\nTry it: https://declutter-helper.vercel.app;
-    window.open(https://wa.me/?text=${encodeURIComponent(text)});
+    const text = 'I used an AI declutter helper for: "${result.item}"\n\nVerdict: ${v.label}\n\n"${result.reasoning}"\n\nAction: ${result.action}\n\nTry it: https://declutter-helper.vercel.app';
+    window.open('https://wa.me/?text=${encodeURIComponent(text)}');
   };
 
   const v = result ? VERDICTS[result.verdict] : null;
