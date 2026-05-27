@@ -58,7 +58,12 @@ async function askClaude(item: string, context: string): Promise<Result> {
   const data = await response.json();
   console.log("API response:", JSON.stringify(data));
 const text = data.content.map((i: { text?: string }) => i.text || "").join("");
-  const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+  const cleaned = text.replace(/```json|```/g, "").trim();
+const start = cleaned.indexOf("{");
+const end = cleaned.lastIndexOf("}");
+const parsed = JSON.parse(cleaned.slice(start, end + 1));
+const validVerdicts = ["keep", "donate", "repurpose", "trash"];
+if (!validVerdicts.includes(parsed.verdict)) parsed.verdict = "trash";
   return { item, ...parsed };
 }
 
