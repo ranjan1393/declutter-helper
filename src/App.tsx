@@ -1,16 +1,18 @@
 import { useState } from "react";
 
-const COLORS = {
-  bg: "#F5F0E8",
-  paper: "#FDFAF4",
-  ink: "#1C1917",
-  muted: "#78716C",
-  accent: "#C84B31",
-  keep: "#2D6A4F",
-  donate: "#1D4E89",
-  repurpose: "#7B5E2A",
-  trash: "#8B1A1A",
-  border: "#E0D8CC",
+const C = {
+  paper: "#F7F2E9",
+  cream: "#EDE7D9",
+  ink: "#2C2416",
+  inkLight: "#6B5E4E",
+  turmeric: "#C8861A",
+  terracotta: "#B85C38",
+  terracottaLight: "#F2E4DC",
+  sage: "#4A6741",
+  sageLight: "#E2EBE1",
+  indigo: "#2D3B6B",
+  indigoLight: "#E1E5F0",
+  border: "#D9CEBF",
 };
 
 type VerdictKey = "keep" | "donate" | "repurpose" | "trash";
@@ -19,21 +21,22 @@ interface VerdictInfo {
   label: string;
   color: string;
   bg: string;
+  symbol: string;
 }
 
 const VERDICTS: Record<VerdictKey, VerdictInfo> = {
-  keep: { label: "Keep It", color: COLORS.keep, bg: "#EAF5EE" },
-  donate: { label: "Donate / Give Away", color: COLORS.donate, bg: "#E8EFF8" },
-  repurpose: { label: "Repurpose", color: COLORS.repurpose, bg: "#F5EFE6" },
-  trash: { label: "Let It Go", color: COLORS.trash, bg: "#F8EAEA" },
+  keep: { label: "Keep It", color: C.sage, bg: C.sageLight, symbol: "◉" },
+  donate: { label: "Donate", color: C.indigo, bg: C.indigoLight, symbol: "◯" },
+  repurpose: { label: "Repurpose", color: C.turmeric, bg: "#FDF3E1", symbol: "◈" },
+  trash: { label: "Let Go", color: C.terracotta, bg: C.terracottaLight, symbol: "◻" },
 };
 
 const EXAMPLES = [
   "Saree gifted by mausi 10 years ago, never worn",
-  "Old Nokia phone from 2012, doesn't turn on",
-  "Stack of engineering textbooks from college",
-  "Broken mixer grinder, been meaning to repair",
-  "Kids' toys from when they were 5 (now 15)",
+  "Old Nokia phone from 2012, does not turn on",
+  "Engineering textbooks from college",
+  "Broken mixer grinder",
+  "Children's toys they've outgrown",
 ];
 
 interface Result {
@@ -56,14 +59,13 @@ async function askClaude(item: string, context: string): Promise<Result> {
     body: JSON.stringify({ item, context }),
   });
   const data = await response.json();
-  console.log("API response:", JSON.stringify(data));
-const text = data.content.map((i: { text?: string }) => i.text || "").join("");
+  const text = data.content.map((i: { text?: string }) => i.text || "").join("");
   const cleaned = text.replace(/```json|```/g, "").trim();
-const start = cleaned.indexOf("{");
-const end = cleaned.lastIndexOf("}");
-const parsed = JSON.parse(cleaned.slice(start, end + 1));
-const validVerdicts = ["keep", "donate", "repurpose", "trash"];
-if (!validVerdicts.includes(parsed.verdict)) parsed.verdict = "trash";
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  const parsed = JSON.parse(cleaned.slice(start, end + 1));
+  const validVerdicts = ["keep", "donate", "repurpose", "trash"];
+  if (!validVerdicts.includes(parsed.verdict)) parsed.verdict = "trash";
   return { item, ...parsed };
 }
 
@@ -95,56 +97,143 @@ export default function App() {
   const shareOnWhatsApp = () => {
     if (!result) return;
     const v = VERDICTS[result.verdict];
-    const text = `I used an AI declutter helper for: "${result.item}"\n\nVerdict: ${v.label}\n\n"${result.reasoning}"\n\nAction: ${result.action}\n\nTry it: https://declutter-helper.vercel.app`;
+    const text = `I asked an AI about: "${result.item}"\n\nVerdict: ${v.label}\n\n${result.reasoning}\n\nNext step: ${result.action}\n\nTry it yourself: https://declutter-helper.vercel.app`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
   const v = result ? VERDICTS[result.verdict] : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: COLORS.bg, fontFamily: "Georgia, serif", padding: 0 }}>
-      <header style={{ background: COLORS.ink, color: COLORS.bg, padding: "24px", borderBottom: `4px solid ${COLORS.accent}` }}>
-        <div style={{ fontSize: "11px", letterSpacing: "4px", textTransform: "uppercase", color: COLORS.accent, marginBottom: "4px" }}>Declutter Helper</div>
-        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "normal" }}>Should I Keep It?</h1>
-        <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#A8A29E", fontStyle: "italic" }}>Honest advice for Indian homes & hearts</p>
+    <div style={{
+      minHeight: "100vh",
+      background: C.paper,
+      fontFamily: "Palatino Linotype, Book Antiqua, Palatino, Georgia, serif",
+    }}>
+
+      <header style={{ background: C.ink, position: "relative", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 41px)",
+        }} />
+        <div style={{ padding: "32px 28px 26px", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+            <div style={{ width: "28px", height: "2px", background: C.terracotta }} />
+            <span style={{ fontSize: "10px", letterSpacing: "4px", textTransform: "uppercase", color: C.terracotta, fontFamily: "Georgia, serif" }}>
+              Should I Keep It
+            </span>
+          </div>
+          <h1 style={{ margin: "0 0 6px", fontSize: "clamp(26px, 5vw, 38px)", fontWeight: "normal", color: C.cream, letterSpacing: "-0.5px", lineHeight: 1.1 }}>
+            Honest guidance for<br />what stays & what goes
+          </h1>
+          <p style={{ margin: 0, fontSize: "13px", color: "#9A8E82", fontStyle: "italic" }}>
+            For Indian homes & the feelings that fill them
+          </p>
+        </div>
+        <div style={{ height: "5px", background: `linear-gradient(90deg, ${C.terracotta}, ${C.turmeric}, ${C.terracotta})` }} />
       </header>
 
-      <main style={{ maxWidth: "640px", margin: "0 auto", padding: "28px 20px 60px" }}>
+      <main style={{ maxWidth: "660px", margin: "0 auto", padding: "36px 20px 80px" }}>
+
         {!result && (
-          <div style={{ background: COLORS.paper, border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "28px", boxShadow: "4px 4px 0px #D4C9B8" }}>
-            <label style={{ display: "block", fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: COLORS.muted, marginBottom: "8px" }}>What's the item?</label>
-            <textarea
-              value={item}
-              onChange={(e) => setItem(e.target.value)}
-              placeholder="e.g. Saree gifted by mausi 10 years ago, never worn..."
-              rows={3}
-              style={{ width: "100%", border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "12px", fontSize: "16px", fontFamily: "Georgia, serif", background: COLORS.bg, color: COLORS.ink, resize: "vertical", outline: "none", boxSizing: "border-box" }}
-            />
-            <label style={{ display: "block", fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: COLORS.muted, margin: "18px 0 8px" }}>
-              Any context? <span style={{ fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
-            </label>
-            <textarea
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="e.g. It was a gift from someone who passed away..."
-              rows={2}
-              style={{ width: "100%", border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "12px", fontSize: "15px", fontFamily: "Georgia, serif", background: COLORS.bg, color: COLORS.ink, resize: "vertical", outline: "none", boxSizing: "border-box" }}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!item.trim() || loading}
-              style={{ marginTop: "20px", background: item.trim() && !loading ? COLORS.accent : "#C4BAB0", color: "#fff", border: "none", padding: "14px 28px", fontSize: "13px", letterSpacing: "2px", textTransform: "uppercase", fontFamily: "Georgia, serif", cursor: item.trim() ? "pointer" : "not-allowed", borderRadius: "2px" }}
-            >
-              {loading ? "Thinking..." : "Get My Verdict →"}
-            </button>
-            {error && <p style={{ color: COLORS.accent, marginTop: "12px", fontSize: "14px" }}>{error}</p>}
-            <div style={{ marginTop: "24px", borderTop: `1px solid ${COLORS.border}`, paddingTop: "16px" }}>
-              <p style={{ fontSize: "11px", letterSpacing: "1px", color: COLORS.muted, textTransform: "uppercase", marginBottom: "10px" }}>Try an example</p>
+          <div>
+            <div style={{ textAlign: "center", marginBottom: "28px", color: C.terracotta, fontSize: "20px", letterSpacing: "14px", opacity: 0.35 }}>
+              ❋ ❋ ❋
+            </div>
+
+            <div style={{
+              background: "#FDFAF5",
+              border: `1px solid ${C.border}`,
+              padding: "32px 28px",
+              boxShadow: `4px 6px 0px ${C.border}`,
+              position: "relative",
+            }}>
+              <div style={{ position: "absolute", top: 0, left: 0, width: "18px", height: "18px", borderTop: `3px solid ${C.terracotta}`, borderLeft: `3px solid ${C.terracotta}` }} />
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: "18px", height: "18px", borderBottom: `3px solid ${C.terracotta}`, borderRight: `3px solid ${C.terracotta}` }} />
+
+              <label style={{ display: "block", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: C.inkLight, marginBottom: "10px" }}>
+                What is the item?
+              </label>
+              <textarea
+                value={item}
+                onChange={(e) => setItem(e.target.value)}
+                placeholder="Describe the item you are unsure about..."
+                rows={3}
+                style={{
+                  width: "100%", border: `1px solid ${C.border}`,
+                  borderBottom: `2px solid ${item ? C.terracotta : C.border}`,
+                  padding: "12px 14px", fontSize: "16px",
+                  fontFamily: "Palatino Linotype, Georgia, serif",
+                  background: C.paper, color: C.ink, resize: "vertical",
+                  outline: "none", boxSizing: "border-box", lineHeight: 1.6,
+                  transition: "border-color 0.2s",
+                }}
+              />
+
+              <label style={{ display: "block", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: C.inkLight, margin: "22px 0 10px" }}>
+                The story behind it{" "}
+                <span style={{ fontStyle: "italic", textTransform: "none", letterSpacing: 0, opacity: 0.7 }}>(optional)</span>
+              </label>
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="A gift? Something you once loved? What makes it hard to decide..."
+                rows={2}
+                style={{
+                  width: "100%", border: `1px solid ${C.border}`,
+                  borderBottom: `2px solid ${context ? C.turmeric : C.border}`,
+                  padding: "12px 14px", fontSize: "15px",
+                  fontFamily: "Palatino Linotype, Georgia, serif",
+                  background: C.paper, color: C.ink, resize: "vertical",
+                  outline: "none", boxSizing: "border-box", lineHeight: 1.6,
+                }}
+              />
+
+              <div style={{ marginTop: "24px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!item.trim() || loading}
+                  style={{
+                    background: item.trim() && !loading ? C.terracotta : "#C4A898",
+                    color: "#FDF8F2", border: "none", padding: "14px 32px",
+                    fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase",
+                    fontFamily: "Georgia, serif", cursor: item.trim() && !loading ? "pointer" : "not-allowed",
+                    transition: "all 0.2s",
+                    boxShadow: item.trim() && !loading ? `3px 3px 0 ${C.ink}` : "none",
+                  }}
+                >
+                  {loading ? "Reflecting..." : "Seek Guidance →"}
+                </button>
+                {loading && (
+                  <span style={{ fontSize: "13px", color: C.inkLight, fontStyle: "italic" }}>
+                    Thinking honestly...
+                  </span>
+                )}
+              </div>
+              {error && <p style={{ color: C.terracotta, marginTop: "14px", fontSize: "14px", fontStyle: "italic" }}>{error}</p>}
+            </div>
+
+            <div style={{ marginTop: "28px" }}>
+              <p style={{
+                fontSize: "10px", letterSpacing: "2px", color: C.inkLight,
+                textTransform: "uppercase", marginBottom: "12px",
+                display: "flex", alignItems: "center", gap: "10px",
+              }}>
+                <span style={{ flex: 1, height: "1px", background: C.border, display: "inline-block" }} />
+                Common dilemmas
+                <span style={{ flex: 1, height: "1px", background: C.border, display: "inline-block" }} />
+              </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {EXAMPLES.map((ex) => (
-                  <button key={ex} onClick={() => setItem(ex)}
-                    style={{ background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: "2px", padding: "6px 10px", fontSize: "12px", fontFamily: "Georgia, serif", color: COLORS.muted, cursor: "pointer" }}>
-                    {ex.length > 32 ? ex.slice(0, 32) + "…" : ex}
+                  <button
+                    key={ex}
+                    onClick={() => setItem(ex)}
+                    style={{
+                      background: "transparent", border: `1px solid ${C.border}`,
+                      padding: "7px 12px", fontSize: "12px", fontFamily: "Georgia, serif",
+                      color: C.inkLight, cursor: "pointer", fontStyle: "italic",
+                    }}
+                  >
+                    {ex.length > 35 ? ex.slice(0, 35) + "..." : ex}
                   </button>
                 ))}
               </div>
@@ -154,27 +243,69 @@ export default function App() {
 
         {result && v && (
           <div>
-            <p style={{ fontSize: "12px", color: COLORS.muted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "6px" }}>Your item</p>
-            <p style={{ fontSize: "16px", color: COLORS.ink, fontStyle: "italic", marginBottom: "20px" }}>"{result.item}"</p>
-            <div style={{ background: v.bg, border: `2px solid ${v.color}`, borderRadius: "2px", padding: "24px", marginBottom: "16px" }}>
-              <span style={{ background: v.color, color: "#fff", padding: "4px 12px", fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", borderRadius: "2px" }}>{v.label}</span>
-              <h2 style={{ margin: "14px 0 10px", fontSize: "22px", color: v.color, fontWeight: "normal" }}>{result.headline}</h2>
-              <p style={{ margin: 0, fontSize: "15px", color: COLORS.ink, lineHeight: 1.7 }}>{result.reasoning}</p>
+            <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: C.inkLight, marginBottom: "8px" }}>
+              You asked about
+            </p>
+            <p style={{
+              fontSize: "17px", color: C.ink, fontStyle: "italic",
+              marginBottom: "26px", lineHeight: 1.5,
+              borderLeft: `3px solid ${C.turmeric}`, paddingLeft: "14px",
+            }}>
+              "{result.item}"
+            </p>
+
+            <div style={{
+              background: v.bg, border: `1px solid ${v.color}`,
+              borderLeft: `5px solid ${v.color}`,
+              padding: "26px 26px 22px", marginBottom: "14px",
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "14px" }}>
+                <span style={{ fontSize: "28px", color: v.color, lineHeight: 1 }}>{v.symbol}</span>
+                <div style={{ fontSize: "22px", color: v.color, fontFamily: "Georgia, serif" }}>{v.label}</div>
+              </div>
+              <h2 style={{ margin: "0 0 12px", fontSize: "clamp(16px, 3vw, 21px)", color: C.ink, fontWeight: "normal", lineHeight: 1.35, fontStyle: "italic" }}>
+                {result.headline}
+              </h2>
+              <p style={{ margin: 0, fontSize: "15px", color: C.ink, lineHeight: 1.8, opacity: 0.85 }}>
+                {result.reasoning}
+              </p>
             </div>
-            <div style={{ background: COLORS.ink, color: COLORS.bg, padding: "18px 24px", borderRadius: "2px", marginBottom: "16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
-              <span style={{ color: COLORS.accent, fontSize: "18px" }}>→</span>
+
+            <div style={{
+              background: C.ink, color: C.cream, padding: "20px 24px",
+              marginBottom: "18px", display: "flex", gap: "14px",
+              alignItems: "flex-start", borderLeft: `4px solid ${C.turmeric}`,
+            }}>
+              <span style={{ color: C.turmeric, fontSize: "18px", lineHeight: 1, marginTop: "2px" }}>→</span>
               <div>
-                <p style={{ margin: "0 0 4px", fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#A8A29E" }}>Do this today</p>
-                <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.6 }}>{result.action}</p>
+                <p style={{ margin: "0 0 5px", fontSize: "9px", letterSpacing: "3px", textTransform: "uppercase", color: C.turmeric }}>
+                  Do this today
+                </p>
+                <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.7, opacity: 0.9 }}>{result.action}</p>
               </div>
             </div>
+
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <button onClick={shareOnWhatsApp}
-                style={{ background: "#25D366", color: "#fff", border: "none", padding: "12px 20px", fontSize: "13px", letterSpacing: "1px", textTransform: "uppercase", fontFamily: "Georgia, serif", cursor: "pointer", borderRadius: "2px" }}>
+              <button
+                onClick={shareOnWhatsApp}
+                style={{
+                  background: "#1A7A3E", color: "#fff", border: "none",
+                  padding: "12px 22px", fontSize: "11px", letterSpacing: "2px",
+                  textTransform: "uppercase", fontFamily: "Georgia, serif",
+                  cursor: "pointer", boxShadow: "3px 3px 0 rgba(0,0,0,0.2)",
+                }}
+              >
                 Share on WhatsApp
               </button>
-              <button onClick={reset}
-                style={{ background: COLORS.accent, color: "#fff", border: "none", padding: "12px 20px", fontSize: "13px", letterSpacing: "1px", textTransform: "uppercase", fontFamily: "Georgia, serif", cursor: "pointer", borderRadius: "2px" }}>
+              <button
+                onClick={reset}
+                style={{
+                  background: C.terracotta, color: "#FDF8F2", border: "none",
+                  padding: "12px 22px", fontSize: "11px", letterSpacing: "2px",
+                  textTransform: "uppercase", fontFamily: "Georgia, serif",
+                  cursor: "pointer", boxShadow: `3px 3px 0 ${C.ink}`,
+                }}
+              >
                 Next Item →
               </button>
             </div>
@@ -182,16 +313,41 @@ export default function App() {
         )}
 
         {history.length > 0 && !loading && (
-          <div style={{ marginTop: "36px", borderTop: `1px solid ${COLORS.border}`, paddingTop: "16px" }}>
-            <p style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: COLORS.muted, marginBottom: "10px" }}>Session History</p>
+          <div style={{ marginTop: "44px" }}>
+            <p style={{
+              fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
+              color: C.inkLight, marginBottom: "12px",
+              display: "flex", alignItems: "center", gap: "10px",
+            }}>
+              <span style={{ flex: 1, height: "1px", background: C.border }} />
+              Today's decisions
+              <span style={{ flex: 1, height: "1px", background: C.border }} />
+            </p>
             {history.map((h, i) => (
-              <div key={i} style={{ display: "flex", gap: "12px", padding: "8px 12px", background: COLORS.paper, border: `1px solid ${COLORS.border}`, borderRadius: "2px", marginBottom: "6px", fontSize: "13px" }}>
-                <span style={{ color: VERDICTS[h.verdict].color, minWidth: "80px", fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" }}>{VERDICTS[h.verdict].label}</span>
-                <span style={{ color: COLORS.muted, fontStyle: "italic" }}>{h.item.length > 45 ? h.item.slice(0, 45) + "…" : h.item}</span>
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "9px 14px", background: "#FDFAF5",
+                border: `1px solid ${C.border}`,
+                borderLeft: `3px solid ${VERDICTS[h.verdict].color}`,
+                marginBottom: "6px", fontSize: "13px",
+              }}>
+                <span style={{ color: VERDICTS[h.verdict].color, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", minWidth: "70px" }}>
+                  {VERDICTS[h.verdict].label}
+                </span>
+                <span style={{ color: C.inkLight, fontStyle: "italic" }}>
+                  {h.item.length > 48 ? h.item.slice(0, 48) + "..." : h.item}
+                </span>
               </div>
             ))}
           </div>
         )}
+
+        <div style={{ marginTop: "60px", textAlign: "center", borderTop: `1px solid ${C.border}`, paddingTop: "20px" }}>
+          <div style={{ color: C.terracotta, fontSize: "16px", letterSpacing: "8px", marginBottom: "8px" }}>❋</div>
+          <p style={{ fontSize: "12px", color: C.inkLight, fontStyle: "italic", margin: 0 }}>
+            Wisdom for mindful Indian homes
+          </p>
+        </div>
       </main>
     </div>
   );
